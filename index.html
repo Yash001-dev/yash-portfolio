@@ -4,878 +4,378 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Yash Badodiya - Portfolio</title>
-    <!-- Preconnect to Google Fonts for faster loading -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <!-- Google Fonts: Inter for main text, Roboto Mono for code-like sections -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
-
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css?family=Sofia" rel="stylesheet">
+    <!-- Custom Font: Inter (Tailwind default, but explicitly setting if needed) -->
     <style>
-        /* Universal Box Sizing */
-        html {
-            box-sizing: border-box;
-        }
-        *, *::before, *::after {
-            box-sizing: inherit;
-        }
-
-        :root {
-            /* Define CSS Variables for easier theme management */
-            --primary-neon: #0ff; /* Cyan */
-            --secondary-neon: #0f0; /* Green */
-            --text-color: #fff;
-            --background-overlay: rgba(0, 0, 0, 0.6);
-            --header-background: rgba(0, 0, 0, 0.5);
-            --toast-bg: #333;
-            --toast-text: #fff;
-            --footer-bg: rgba(0, 0, 0, 0.4);
-            --light-grey: #aaa;
-            --font-heading: 'Inter', sans-serif;
-            --font-body: 'Inter', sans-serif;
-            --font-code: 'Roboto Mono', monospace;
-        }
-
         body {
+            font-family: 'Inter', sans-serif;
             margin: 0;
             padding: 0;
-            font-family: var(--font-body);
-            color: var(--text-color);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-            overflow-x: hidden; /* Prevent horizontal scroll due to animations */
-            position: relative; /* For the shader background */
-            background-color: #000; /* Fallback for no WebGL */
-            /* Original Giphy background image, now as a fallback if WebGL fails or is removed */
-            background: url('https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExN3I0bWpvZTZ3N2U1MnB0YTgybm44YzhvaXZndTVzcmtoNnE4cHNuaCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/WrmMDD4BpYSEjzQpJS/giphy.gif') no-repeat center center fixed;
-            background-size: cover;
+            overflow-x: hidden; /* Prevent horizontal scrolling */
+            background-color: #000; /* Ensure body background is black */
         }
 
-        /* WebGL Background Container */
-        #shader-container {
-            position: fixed; /* Fixed position to cover the entire viewport */
+        /* Canvas for the particle animation - fixed in the background */
+        #particles-js {
+            position: fixed;
             top: 0;
             left: 0;
-            width: 100vw;
-            height: 100vh;
-            z-index: -1; /* Place behind other content */
-            pointer-events: none; /* Allow clicks to pass through to content below */
-            background: transparent; /* Ensure it's transparent to show the GIF if WebGL fails */
-        }
-
-        #shader-canvas {
             width: 100%;
             height: 100%;
-            display: block;
+            z-index: 0; /* Place behind all content */
+            background-color: #000; /* Ensure canvas background is black */
         }
 
-        /* Main content wrapper to sit on top of the shader */
-        .content {
+        /* Main content wrapper to allow vertical scrolling */
+        .content-wrapper {
+            position: relative;
+            z-index: 10; /* Above particles, below toast */
+            width: 100%;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
-            width: 100%;
-            max-width: 960px; /* Max width for content */
-            padding: 1rem; /* Overall padding for content */
-            z-index: 1; /* Ensure content is above the background */
-            position: relative; /* For stacking context */
+            padding: 1rem; /* Overall padding for the content */
+            box-sizing: border-box;
         }
 
-        /* Header Section */
-        .hero-section {
-            text-align: center;
-            padding: 3rem 1.5rem;
-            animation: fadeIn 2s ease-in-out, slideDown 1.5s ease-out;
-            border: 2px solid var(--primary-neon);
+        /* Styling for content sections */
+        .section-card {
+            background-color: rgba(0, 0, 0, 0.6); /* Semi-transparent background */
             border-radius: 1rem;
-            margin: 1.5rem 0; /* Adjusted margin */
-            background-color: var(--header-background);
-            box-shadow: 0 0 20px rgba(0, 255, 255, 0.5), 0 0 40px rgba(0, 255, 0, 0.3); /* Subtle glow */
-            width: 100%; /* Ensure it takes full width of content wrapper */
-            max-width: 800px; /* Limit header width */
+            padding: 2rem;
+            margin-bottom: 2rem; /* Space between sections */
+            max-width: 800px;
+            width: 100%;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: 2px solid #0ff; /* Border for sections */
         }
 
-        .hero-title {
-            font-family: var(--font-code); /* Using code font for title */
-            font-size: clamp(2rem, 6vw, 4rem); /* Responsive font size */
-            background: linear-gradient(90deg, var(--primary-neon), var(--secondary-neon));
+        /* Header specific styling */
+        .header-card {
+            padding: 3rem 1rem;
+            margin-top: 2rem; /* Space from top */
+        }
+
+        /* Typing animation for H1 */
+        .typing-effect {
+            font-size: 3rem;
+            background: linear-gradient(90deg, #0ff, #0f0);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             white-space: nowrap;
             overflow: hidden;
-            animation: typing 3s steps(30) 1 forwards, blink .7s step-end infinite; /* forwards to keep final state */
-            border-right: 2px solid var(--secondary-neon);
-            margin: 0 auto; /* Center the typing effect */
-            display: inline-block; /* Required for typing animation */
-            max-width: calc(100% - 2rem); /* Account for padding */
-        }
-
-        .bio-card {
-            border: 1px solid var(--primary-neon);
-            padding: 1rem 1.5rem;
-            border-radius: 0.75rem;
-            background-color: rgba(0,0,0,0.4);
-            margin-top: 1.5rem;
-            box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
-        }
-
-        .bio-card p {
-            margin: 0.5rem 0;
-            line-height: 1.6;
-            font-size: clamp(0.9rem, 2vw, 1.1rem);
-        }
-
-        .bio-card em {
-            color: var(--secondary-neon);
-        }
-
-        /* Section Styling */
-        .portfolio-section {
-            width: 100%;
-            max-width: 800px;
-            padding: 2rem;
-            background-color: var(--background-overlay);
-            border-radius: 1rem;
-            margin: 1.5rem 0; /* Consistent margin */
-            animation: fadeIn 2s ease-in;
-            box-shadow: 0 0 15px rgba(0, 255, 255, 0.4);
-        }
-
-        .section-title {
-            color: var(--primary-neon);
-            border-bottom: 1px solid var(--secondary-neon);
-            padding-bottom: 0.8rem;
-            margin-bottom: 1.5rem;
-            font-size: clamp(1.8rem, 4vw, 2.5rem);
-            text-shadow: 0 0 8px rgba(0, 255, 255, 0.5); /* Subtle text glow */
-        }
-
-        .skill-list, .project-list {
-            list-style: none; /* Remove default list style */
-            padding-left: 0;
-        }
-
-        .skill-list li, .project-list li {
-            background: rgba(0,0,0,0.2);
-            margin-bottom: 0.8rem;
-            padding: 1rem 1.2rem;
-            border-left: 3px solid var(--primary-neon);
-            border-radius: 0.5rem;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .skill-list li:hover, .project-list li:hover {
-            transform: translateX(5px);
-            box-shadow: 0 0 10px rgba(0, 255, 255, 0.6);
-        }
-
-        .skill-list li strong, .project-list li strong {
-            color: var(--secondary-neon);
-            margin-right: 0.5rem;
-        }
-
-        /* Available At / Contact Section */
-        .contact-section p {
-            display: flex;
-            align-items: center;
-            margin-bottom: 1rem;
-            font-size: 1.1rem;
-        }
-
-        .icon {
-            width: 24px; /* Slightly larger icons */
-            height: 24px;
-            vertical-align: middle;
-            margin-right: 12px;
-            filter: drop-shadow(0 0 5px rgba(0, 255, 255, 0.5)); /* Icon glow */
-        }
-
-        .email-address {
-            color: var(--primary-neon);
-            cursor: pointer;
-            text-decoration: none; /* Ensure no underline by default */
-            transition: color 0.3s ease;
-        }
-
-        .email-address:hover {
-            color: var(--secondary-neon);
-            text-decoration: underline; /* Underline on hover */
-        }
-
-        /* Links */
-        a {
-            color: var(--primary-neon);
-            text-decoration: none;
-            transition: color 0.3s ease, text-shadow 0.3s ease;
-        }
-
-        a:hover {
-            color: var(--secondary-neon); /* Change color on hover */
-            text-decoration: underline;
-            text-shadow: 0 0 5px rgba(0, 255, 255, 0.7); /* Subtle glow on hover */
-        }
-
-        /* Footer */
-        .site-footer {
-            margin-top: auto; /* Pushes footer to the bottom */
-            padding: 2rem;
-            font-size: 0.9rem;
-            color: var(--light-grey);
-            background-color: var(--footer-bg);
-            width: 100%;
-            text-align: center;
-            position: relative; /* For absolute positioned elements inside */
-            box-shadow: 0 0 15px rgba(0, 255, 255, 0.2) inset; /* Inner glow */
-        }
-
-        .footer-cat-img {
-            width: 80px; /* Slightly smaller cat image */
-            display: block;
-            margin: 1rem auto 0;
-            filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.5)); /* Cat image glow */
-            animation: floatUpDown 3s ease-in-out infinite; /* Floating animation */
-        }
-
-        /* Toast Notification */
-        .toast {
-            visibility: hidden;
-            min-width: 280px; /* Slightly wider */
-            background-color: var(--toast-bg);
-            color: var(--toast-text);
-            text-align: center;
-            border-radius: 5px; /* Softer edges */
-            padding: 16px 20px;
-            position: fixed;
-            z-index: 1000; /* High z-index to be on top */
-            left: 50%;
-            transform: translateX(-50%); /* Center horizontally */
-            bottom: 30px;
-            font-size: 1.1rem;
-            box-shadow: 0 0 15px rgba(0, 255, 255, 0.7); /* Glow effect */
-        }
-
-        .toast.show {
-            visibility: visible;
-            animation: fadein 0.5s forwards, fadeout 0.5s 2.5s forwards; /* Use forwards to keep state */
-        }
-
-        /* Animations */
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        @keyframes slideDown {
-            from { transform: translateY(-50px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
+            animation: typing 3s steps(30) 1 forwards, blink .7s step-end infinite;
+            border-right: 2px solid #0f0;
+            max-width: 90vw;
+            display: inline-block; /* Required for typing effect to work correctly */
         }
 
         @keyframes typing {
             from { width: 0 }
             to { width: 100% }
         }
-
         @keyframes blink {
             50% { border-color: transparent }
         }
 
-        @keyframes fadein {
-            from { bottom: 0; opacity: 0; }
-            to { bottom: 30px; opacity: 1; }
+        /* General text and link styling */
+        h2 {
+            color: #0ff;
+            border-bottom: 1px solid #0f0;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1.5rem;
+            text-align: left; /* Align h2 to left within its card */
         }
 
-        @keyframes fadeout {
-            from { bottom: 30px; opacity: 1; }
-            to { bottom: 0; opacity: 0; }
+        ul {
+            list-style: square;
+            padding-left: 1.5rem;
+            text-align: left; /* Align list items to left */
         }
 
-        @keyframes floatUpDown {
-            0% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
-            100% { transform: translateY(0); }
+        p {
+            margin-bottom: 1rem;
         }
 
-        /* Media Queries for Responsiveness */
-        @media (max-width: 768px) {
-            .hero-section {
-                padding: 2rem 1rem;
-                margin: 1rem 0;
-            }
-
-            .hero-title {
-                font-size: clamp(1.8rem, 8vw, 3rem);
-            }
-
-            .bio-card {
-                padding: 1rem;
-            }
-
-            .portfolio-section {
-                padding: 1.5rem;
-                margin: 1rem 0;
-            }
-
-            .section-title {
-                font-size: clamp(1.5rem, 6vw, 2rem);
-                padding-bottom: 0.6rem;
-                margin-bottom: 1rem;
-            }
-
-            .skill-list li, .project-list li {
-                padding: 0.8rem 1rem;
-            }
-
-            .contact-section p {
-                font-size: 1rem;
-            }
-
-            .icon {
-                width: 20px;
-                height: 20px;
-                margin-right: 10px;
-            }
-
-            .site-footer {
-                padding: 1.5rem;
-            }
-
-            .footer-cat-img {
-                width: 60px;
-            }
+        a {
+            color: #0ff;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+        a:hover {
+            color: #0f0;
+            text-decoration: underline;
         }
 
-        @media (max-width: 480px) {
-            .hero-section {
-                padding: 1.5rem 0.8rem;
-            }
-
-            .hero-title {
-                white-space: normal; /* Allow title to wrap on very small screens */
-                max-width: 100%;
-                animation: none; /* Disable typing animation on small screens for better readability */
-                border-right: none;
-            }
-
-            .bio-card p {
-                font-size: 0.9rem;
-            }
-
-            .portfolio-section {
-                padding: 1rem;
-            }
-
-            .section-title {
-                font-size: 1.3rem;
-            }
-
-            .skill-list li, .project-list li {
-                padding: 0.7rem 0.8rem;
-                font-size: 0.9rem;
-            }
-
-            .contact-section p {
-                font-size: 0.9rem;
-            }
-
-            .toast {
-                min-width: unset; /* Remove min-width */
-                width: 90%; /* Occupy most of the width */
-                left: 5%;
-                transform: translateX(0); /* Reset transform */
-                padding: 12px;
-                font-size: 0.9rem;
-            }
+        .icon {
+            width: 18px;
+            vertical-align: middle;
+            margin-right: 8px;
         }
 
-        /* Styles for the new AI-powered section */
-        .ai-section {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+        .cat-img {
+            width: 100px;
+            display: block;
+            margin: 1rem auto 0;
+            border-radius: 50%; /* Make cat image round */
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.5); /* Glowing effect */
+        }
+
+        /* Toast notification */
+        #toast {
+            visibility: hidden;
+            min-width: 250px;
+            background-color: #333;
+            color: #fff;
             text-align: center;
+            border-radius: 0.5rem;
+            padding: 16px;
+            position: fixed;
+            z-index: 1000; /* Ensure toast is on top */
+            left: 50%;
+            bottom: 30px;
+            transform: translateX(-50%);
+            font-size: 17px;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.7);
+        }
+        #toast.show {
+            visibility: visible;
+            animation: fadein 0.5s, fadeout 0.5s 2.5s;
+        }
+        @keyframes fadein {
+            from {bottom: 0; opacity: 0;}
+            to {bottom: 30px; opacity: 1;}
+        }
+        @keyframes fadeout {
+            from {bottom: 30px; opacity: 1;}
+            to {bottom: 0; opacity: 0;}
         }
 
-        .ai-button {
-            background: linear-gradient(90deg, #0f0, #0ff);
-            color: #000;
-            border: none;
-            padding: 15px 30px;
-            border-radius: 50px;
-            font-size: 1.2rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 0 15px rgba(0, 255, 255, 0.7), 0 0 25px rgba(0, 255, 0, 0.5);
-            margin-top: 1rem;
-            margin-bottom: 2rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .typing-effect {
+                font-size: 2rem;
+            }
+            .section-card {
+                padding: 1.5rem;
+            }
+            .header-card {
+                padding: 2rem 0.5rem;
+            }
         }
-
-        .ai-button:hover {
-            transform: translateY(-3px) scale(1.02);
-            box-shadow: 0 0 20px rgba(0, 255, 255, 1), 0 0 35px rgba(0, 255, 0, 0.8);
-        }
-
-        .ai-button:active {
-            transform: translateY(0);
-            box-shadow: 0 0 10px rgba(0, 255, 255, 0.5), 0 0 20px rgba(0, 255, 0, 0.3);
-        }
-
-        .ai-output {
-            background-color: rgba(0, 0, 0, 0.3);
-            border: 1px solid var(--primary-neon);
-            border-radius: 0.75rem;
-            padding: 1.5rem;
-            margin-top: 1rem;
-            width: 100%;
-            min-height: 100px;
-            text-align: left;
-            line-height: 1.6;
-            font-size: 1.1rem;
-            color: var(--text-color);
-            box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
-            display: flex; /* For centering loading text */
-            align-items: center;
-            justify-content: center;
-        }
-
-        .loading-spinner {
-            border: 4px solid rgba(255, 255, 255, 0.3);
-            border-top: 4px solid var(--primary-neon);
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            animation: spin 1s linear infinite;
-            margin-right: 10px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        @media (max-width: 480px) {
+            .typing-effect {
+                font-size: 1.5rem;
+            }
+            .section-card {
+                padding: 1rem;
+            }
         }
     </style>
 </head>
 <body>
-    <!-- WebGL Shader Background Canvas -->
-    <div id="shader-container">
-        <canvas id="shader-canvas"></canvas>
-    </div>
+    <!-- Canvas for particle background -->
+    <canvas id="particles-js"></canvas>
 
-    <!-- Main Content -->
-    <main class="content">
-        <header class="hero-section">
-            <h1 class="hero-title">Yash Badodiya</h1>
-            <div class="bio-card">
-                <p>A student with curiosity in many fields, exploring the world through science and technology with curiosity and creativity.</p>
-                <p><em>Currently trying to dive deeper into science and innovation by pursuing Physics in my Bachelors.</em></p>
+    <!-- Main content wrapper -->
+    <div class="content-wrapper">
+        <header class="section-card header-card">
+            <h1 class="typing-effect">Yash Badodiya</h1>
+            <div class="border border-cyan-500 p-4 rounded-lg bg-black bg-opacity-30 mt-4">
+                <p class="text-gray-200 text-lg">A student with curiosity in many fields, exploring the world through science and technology with curiosity and creativity.</p>
+                <p class="text-gray-300 italic mt-2">Currently trying to dive deeper into science and innovation by pursuing Physics in my Bachelors.</p>
             </div>
         </header>
 
-        <section class="portfolio-section">
-            <h2 class="section-title">Skills</h2>
-            <ul class="skill-list" id="skill-list-for-ai">
-                <li><strong>AI Utilization:</strong> Knows how to extract output from AI.</li>
-                <li><strong>Web Development:</strong> Basic understanding and programming.</li>
-                <li><strong>Hardware Exploration:</strong> Almost opened every electronics and hardware tool for knowledge.</li>
-                <li><strong>Video and Photo Editing:</strong> Proficient in high-level editing on PC and mobile.</li>
-                <li><strong>YouTube Channel Owner:</strong> Owned two YouTube Channels.</li>
-                <li><strong>E-commerce Experience:</strong> Experience running stores on platforms like Amazon, Flipkart, and Meesho.</li>
-                <li><strong>Basic Accounting:</strong> Knowledge in areas like GST Filing and applying for GST.</li>
+        <section class="section-card">
+            <h2>Skills</h2>
+            <ul class="list-square text-gray-100">
+                <li><strong>AI Utilization:</strong> Knows how to Extract output from a AI</li>
+                <li><strong>Web development:</strong> Basic understanding and Programming</li>
+                <li><strong>Hardware opener:</strong> Almost opened ever electronics and hardware tools for knowledge</li>
+                <li><strong>Video and photo editing:</strong> Know high level editing on PC as well as on Phone</li>
+                <li><strong>Owner of two YouTube channels:</strong> Owned two Youtube Channels </li>
+                <li><strong>Experience of running e-commerce stores:</strong> like Amazon, Flipkart, and Meesho</li>
+                <li><strong>Chartered Accountant:</strong> Basic Knowledge like GST Filing, Applying for GST and ect.</li>
             </ul>
         </section>
 
-        <section class="portfolio-section">
-            <h2 class="section-title">Projects</h2>
-            <ul class="project-list">
-                <li><strong>AI Voice Assistant:</strong> Built a voice-based tool to control home appliances.</li>
-                <li><strong>Hardware Projects:</strong> Built an electricity generator as a learning experiment.</li>
-                <li><strong>Electrical Projects:</strong> Built a fully functional, high-quality Bluetooth speaker.</li>
-                <li><strong>Custom Android OS:</strong> Modified and installed a custom operating system on a phone for better control and features.</li>
+        <section class="section-card">
+            <h2>Projects</h2>
+            <ul class="list-square text-gray-100">
+                <li><strong>AI Voice Assistant:</strong> Built a voice-based tool to control home appliances</li>
+                <li><strong>Hardware Projects:</strong> Built an electricity generator as a learning experiment</li>
+                <li><strong>Electrical Projects:</strong> Built a fully functional, high-quality Bluetooth speaker</li>
+                <li><strong>Custom Android OS:</strong> Modified and installed a custom operating system on a phone for better control and features</li>
             </ul>
         </section>
 
-        <!-- New AI-Powered Section -->
-        <section class="portfolio-section ai-section">
-            <h2 class="section-title">✨ AI-Powered Ideas</h2>
-            <p>Curious about what kind of projects Yash might tackle next? Click the button below to generate a new, innovative project idea based on his skills!</p>
-            <button id="generateIdeaBtn" class="ai-button">Generate Project Idea ✨</button>
-            <div id="aiOutput" class="ai-output">
-                Your AI-generated project idea will appear here.
-            </div>
+        <section class="section-card">
+            <h2>Available At</h2>
+            <p class="text-gray-100"><img class="icon" src="https://upload.wikimedia.org/wikipedia/commons/a/a5/Instagram_icon.png" alt="Instagram Icon"> Instagram: <a href="https://instagram.com/yash_badodiya_" target="_blank" class="text-cyan-400 hover:text-green-400">@yash_badodiya_</a></p>
+            <p class="text-gray-100"><img class="icon" src="https://upload.wikimedia.org/wikipedia/commons/4/4e/Gmail_Icon.png" alt="Gmail Icon"> Email: <span class="text-cyan-400 cursor-pointer hover:text-green-400" onclick="copyEmail()">badodiyash7@gmail.com</span></p>
+            <p class="text-gray-100"><img class="icon" src="https://upload.wikimedia.org/wikipedia/commons/7/75/YouTube_social_white_squircle_%282017%29.svg" alt="YouTube Icon"> YouTube #1: <a href="https://www.youtube.com/@yashgamingboi" target="_blank" class="text-cyan-400 hover:text-green-400">Yash Gaming Boi</a> (71k+ subscribers)<br>
+            <img class="icon" src="https://upload.wikimedia.org/wikipedia/commons/7/75/YouTube_social_white_squircle_%282017%29.svg" alt="YouTube Icon"> YouTube #2: <a href="https://www.youtube.com/@yashgamingboiz" target="_blank" class="text-cyan-400 hover:text-green-400">Yash Gaming Boiz</a> (1.2k+ subscribers)</p>
+            <p class="text-gray-100"><img class="icon" src="https://cdn.iconscout.com/icon/free/png-256/free-discord-2752210-2285027.png" alt="Discord Icon"> Discord: <a href="https://discord.com/invite/u6pHVE65dr" target="_blank" class="text-cyan-400 hover:text-green-400">Join Server</a></p>
         </section>
 
-        <section class="portfolio-section contact-section">
-            <h2 class="section-title">Available At</h2>
-            <p><img class="icon" src="https://upload.wikimedia.org/wikipedia/commons/a/a5/Instagram_icon.png" alt="Instagram icon" onerror="this.onerror=null;this.src='https://placehold.co/24x24/000000/FFFFFF?text=IG';"> Instagram: <a href="https://instagram.com/yash_badodiya_" target="_blank" rel="noopener noreferrer">@yash_badodiya_</a></p>
-            <p><img class="icon" src="https://upload.wikimedia.org/wikipedia/commons/4/4e/Gmail_Icon.png" alt="Gmail icon" onerror="this.onerror=null;this.src='https://placehold.co/24x24/000000/FFFFFF?text=GM';"> Email: <span class="email-address" onclick="copyEmail()">badodiyash7@gmail.com</span></p>
-            <p><img class="icon" src="https://upload.wikimedia.org/wikipedia/commons/7/75/YouTube_social_white_squircle_%282017%29.svg" alt="YouTube icon" onerror="this.onerror=null;this.src='https://placehold.co/24x24/000000/FFFFFF?text=YT';"> YouTube #1: <a href="https://www.youtube.com/@yashgamingboi" target="_blank" rel="noopener noreferrer">Yash Gaming Boi</a> (71k+ subscribers)</p>
-            <p><img class="icon" src="https://upload.wikimedia.org/wikipedia/commons/7/75/YouTube_social_white_squircle_%282017%29.svg" alt="YouTube icon" onerror="this.onerror=null;this.src='https://placehold.co/24x24/000000/FFFFFF?text=YT';"> YouTube #2: <a href="https://www.youtube.com/@yashgamingboiz" target="_blank" rel="noopener noreferrer">Yash Gaming Boiz</a> (1.2k+ subscribers)</p>
-            <p><img class="icon" src="https://cdn.iconscout.com/icon/free/png-256/free-discord-2752210-2285027.png" alt="Discord icon" onerror="this.onerror=null;this.src='https://placehold.co/24x24/000000/FFFFFF?text=DS';"> Discord: <a href="https://discord.com/invite/u6pHVE65dr" target="_blank" rel="noopener noreferrer">Join Server</a></p>
-        </section>
-    </main>
+        <div id="toast">Email copied to clipboard!</div>
 
-    <div id="toast" class="toast">Email copied to clipboard!</div>
-
-    <footer class="site-footer">
-        &copy; 2025 Yash Badodiya
-        <img class="footer-cat-img" src="https://lh3.googleusercontent.com/a/ACg8ocKjCnjxKK-QI6bxpQ0LFiG-g9tObRDvglWEFT97D03C5NLc4T0x=s396-c-no" alt="Cute cat cartoon" onerror="this.onerror=null;this.src='https://placehold.co/80x80/000000/FFFFFF?text=CAT';">
-    </footer>
+        <footer class="w-full text-center py-8 text-gray-400 text-sm relative z-10 bg-black bg-opacity-40 mt-auto">
+            &copy; 2025 Yash Badodiya 
+            <img class="cat-img" src="https://lh3.googleusercontent.com/a/ACg8ocKjCnjxKK-QI6bxpQ0LFiG-g9tObRDvglWEFT97D03C5NLc4T0x=s396-c-no" alt="cat Cartoon">
+        </footer>
+    </div>
 
     <script>
-        // WebGL Shader Background Script
-        const canvas = document.getElementById('shader-canvas');
-        const gl = canvas.getContext('webgl');
-
-        if (!gl) {
-            console.error('WebGL not supported in your browser. Displaying static background.');
-            const shaderContainer = document.getElementById('shader-container');
-            if (shaderContainer) {
-                shaderContainer.remove(); // Remove the canvas container
-            }
-            // Add a message to the main content if WebGL is not supported
-            const mainContent = document.querySelector('main.content');
-            if (mainContent) {
-                const webglWarning = document.createElement('div');
-                webglWarning.style.cssText = `
-                    background-color: rgba(255, 0, 0, 0.7);
-                    color: white;
-                    padding: 15px;
-                    margin: 20px auto;
-                    border-radius: 8px;
-                    text-align: center;
-                    font-family: var(--font-body);
-                    max-width: 600px;
-                    box-shadow: 0 0 15px rgba(255, 0, 0, 0.5);
-                `;
-                webglWarning.innerHTML = `
-                    <p><strong>Warning:</strong> Your browser does not support WebGL, or there was an issue initializing it.</p>
-                    <p>The interactive background animation cannot be displayed. You are seeing a static background image instead.</p>
-                    <p>Please ensure your browser and graphics drivers are up to date.</p>
-                `;
-                mainContent.prepend(webglWarning); // Add at the top of the main content
-            }
-        } else {
-            // Resize Observer for more efficient canvas resizing
-            const resizeObserver = new ResizeObserver(entries => {
-                for (let entry of entries) {
-                    canvas.width = entry.contentRect.width;
-                    canvas.height = entry.contentRect.height;
-                    gl.viewport(0, 0, canvas.width, canvas.height);
-                }
-            });
-            resizeObserver.observe(canvas);
-
-            function createShader(gl, type, source) {
-                const shader = gl.createShader(type);
-                gl.shaderSource(shader, source);
-                gl.compileShader(shader);
-
-                if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-                    console.error('Shader compilation error:', gl.getShaderInfoLog(shader));
-                    gl.deleteShader(shader);
-                    return null;
-                }
-                return shader;
-            }
-
-            // Vertex Shader (standard for full-screen quad)
-            const vertexShaderSource = `
-                attribute vec2 aPosition;
-                void main() {
-                    gl_Position = vec4(aPosition, 0.0, 1.0);
-                }
-            `;
-
-            // Fragment Shader (your original shader code)
-            const fragmentShaderSource = `
-                precision mediump float;
-                uniform vec2 iResolution;
-                uniform float iTime;
-                uniform vec4 iMouse;
-
-                float band(float left, float right, float val, float blur) {
-                    float mask1 = smoothstep(left-blur, left, val);
-                    float mask2 = smoothstep(right+blur, right, val);
-                    return mask1*mask2;
-                }
-
-                float rect(float left, float right, float bottom, float top, vec2 uv, float blur) {
-                    float mask1 = band(left, right, uv.x, blur);
-                    float mask2 = band(bottom, top, uv.y, blur);
-                    return mask1*mask2;
-                }
-
-                float remap(float a, float b, float c, float d, float val) {
-                    return c + (val - a)/(b-a) * (d - c);
-                }
-
-                const int MAX_WARM_POINTS = 10;
-
-                void mainImage(out vec4 fragColor, in vec2 fragCoord)
-                {
-                    vec2 uv = fragCoord/iResolution.xy;
-                    vec2 mouse = iMouse.xy/iResolution.xy;
-                    float t = iTime;
-                    bool isClicked = iMouse.z > 0.0;
-
-                    float waveOffsetX = 0.16;
-                    float waveOffsetY = 0.0;
-
-                    if (isClicked) {
-                        waveOffsetX = mix(0.16, mouse.x, 0.3);
-                    }
-
-                    vec2 offsetUV = uv - vec2(waveOffsetX, waveOffsetY);
-
-                    offsetUV.y *= 15.0;
-
-                    float x = offsetUV.x;
-
-                    float waveAmplitude = 0.4;
-                    if (isClicked) {
-                        waveAmplitude = 0.5 + 0.1 * sin(t * 2.0);
-                    }
-
-                    float waveFreq = 10.0;
-                    float m = sin(t/.9 + x*waveFreq) * waveAmplitude;
-                    float y = offsetUV.y - 0.4*m;
-
-                    float blur = remap(-0.4, 0.4, 0.1, 1.2, x);
-                    blur = pow(blur, 2.0);
-
-                    float mask = rect(-0.4, 0.4, -0.4, 0.1, vec2(x,y), blur);
-
-                    float glowSize = 3.0;
-                    float glowMask = rect(-0.4, 0.4, -0.4, 0.1, vec2(x,y), blur * glowSize);
-
-                    vec2 wavePos = vec2(x, y/15.0) + vec2(waveOffsetX, 0.0);
-                    float mouseDist = length(mouse - wavePos);
-                    float hoverEffect = smoothstep(0.15, 0.0, mouseDist);
-
-                    vec2 warmPoints[MAX_WARM_POINTS];
-                    float warmPointsIntensity[MAX_WARM_POINTS];
-                    vec3 warmPointsColor[MAX_WARM_POINTS];
-
-                    for (int i = 0; i < MAX_WARM_POINTS; i++) {
-                        warmPoints[i] = vec2(-1.0, -1.0);
-                        warmPointsIntensity[i] = 0.0;
-                        warmPointsColor[i] = vec3(1.0, 0.9, 0.8);
-                    }
-
-                    warmPoints[0] = mouse;
-                    warmPointsIntensity[0] = 1.0;
-                    warmPointsColor[0] = vec3(
-                        1.0,
-                        0.9 - 0.1 * mouse.y,
-                        0.8 - 0.2 * mouse.x
-                    );
-
-                    vec3 neonColor = vec3(0.9, 0.95, 1.0);
-
-                    float totalWarmInfluence = 0.0;
-                    vec3 totalWarmColor = vec3(0.0);
-
-                    for (int i = 0; i < MAX_WARM_POINTS; i++) {
-                        if (warmPointsIntensity[i] <= 0.01) continue;
-
-                        float dist = length(warmPoints[i] - wavePos);
-
-                        float influence = warmPointsIntensity[i] * smoothstep(0.3, 0.0, dist);
-
-                        totalWarmInfluence += influence;
-                        totalWarmColor += warmPointsColor[i] * influence;
-                    }
-
-                    if (totalWarmInfluence > 0.0) {
-                        totalWarmColor /= totalWarmInfluence;
-                    }
-
-                    vec3 finalNeonColor = neonColor;
-
-                    vec3 warmNeonColor = vec3(1.0, 0.95, 0.85);
-                    finalNeonColor = mix(finalNeonColor, warmNeonColor, hoverEffect * 0.7);
-
-                    finalNeonColor = mix(finalNeonColor, totalWarmColor, min(1.0, totalWarmInfluence * 0.8));
-
-                    vec3 col = vec3(0.0);
-                    col += vec3(1.0) * mask;
-
-                    float glowIntensity = 0.6 + hoverEffect * 0.3 + totalWarmInfluence * 0.3;
-                    glowIntensity = min(1.0, glowIntensity);
-
-                    col += finalNeonColor * glowMask * glowIntensity;
-
-                    float emissionBoost = 1.15 + hoverEffect * 0.15 + totalWarmInfluence * 0.15;
-                    col *= emissionBoost;
-
-                    float interactionStrength = max(hoverEffect, totalWarmInfluence);
-                    if (interactionStrength > 0.05) {
-                        float pulse = 1.0 + 0.07 * sin(t * 3.0) * interactionStrength;
-                        col *= pulse;
-                    }
-
-                    fragColor = vec4(col, 1.0);
-                }
-
-                void main() {
-                    vec4 fragColor;
-                    mainImage(fragColor, gl_FragCoord.xy);
-                    gl_FragColor = fragColor;
-                }
-            `;
-
-            const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
-            const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
-
-            const program = gl.createProgram();
-            gl.attachShader(program, vertexShader);
-            gl.attachShader(program, fragmentShader);
-            gl.linkProgram(program);
-
-            if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-                console.error('Program linking error:', gl.getProgramInfoLog(program));
-            }
-
-            gl.useProgram(program);
-
-            const positionBuffer = gl.createBuffer();
-            gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-                -1.0, -1.0,
-                1.0, -1.0,
-                -1.0, 1.0,
-                -1.0, 1.0,
-                1.0, -1.0,
-                1.0, 1.0
-            ]), gl.STATIC_DRAW);
-
-            const positionLocation = gl.getAttribLocation(program, 'aPosition');
-            gl.enableVertexAttribArray(positionLocation);
-            gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
-
-            const timeLocation = gl.getUniformLocation(program, 'iTime');
-            const resolutionLocation = gl.getUniformLocation(program, 'iResolution');
-            const mouseLocation = gl.getUniformLocation(program, 'iMouse');
-
-            let mouseX = 0;
-            let mouseY = 0;
-            let mouseDown = 0;
-
-            canvas.addEventListener('mousemove', (e) => {
-                mouseX = e.clientX;
-                mouseY = e.clientY;
-            });
-
-            canvas.addEventListener('mousedown', () => {
-                mouseDown = 1;
-            });
-
-            canvas.addEventListener('mouseup', () => {
-                mouseDown = 0;
-            });
-
-            let startTime = Date.now();
-
-            function render() {
-                const time = (Date.now() - startTime) / 1000;
-
-                gl.uniform1f(timeLocation, time);
-                gl.uniform2f(resolutionLocation, canvas.width, canvas.height);
-                // Invert Y-coordinate for mouse to match WebGL's bottom-left origin
-                gl.uniform4f(mouseLocation, mouseX, canvas.height - mouseY, mouseDown, 0);
-
-                gl.drawArrays(gl.TRIANGLES, 0, 6);
-
-                requestAnimationFrame(render);
-            }
-
-            render();
-        }
-
-
-        // Regular JavaScript for Email Copy and Toast
+        // Function to copy email to clipboard
         function copyEmail() {
             const email = 'badodiyash7@gmail.com';
-            // Use document.execCommand('copy') for better compatibility in iframes
-            const tempInput = document.createElement('textarea');
-            tempInput.value = email;
-            document.body.appendChild(tempInput);
-            tempInput.select();
-            try {
-                document.execCommand('copy');
-                const toast = document.getElementById("toast");
-                toast.className = "toast show"; // Add 'toast' class to ensure base styles are applied
-                setTimeout(() => {
-                    toast.className = "toast"; // Reset to just 'toast'
-                }, 3000);
-            } catch (err) {
-                console.error('Failed to copy email: ', err);
-                // Fallback for browsers where execCommand might not work or is deprecated
-                // In a real app, you might show a message like "Please copy manually: badodiyash7@gmail.com"
-            } finally {
-                document.body.removeChild(tempInput);
+            document.execCommand('copy', false, email); // Using execCommand for broader iframe compatibility
+            const toast = document.getElementById("toast");
+            toast.className = "show";
+            setTimeout(() => toast.className = toast.className.replace("show", ""), 3000);
+        }
+
+        // Particle animation JavaScript
+        const canvas = document.getElementById('particles-js');
+        const ctx = canvas.getContext('2d');
+
+        let particlesArray;
+        let mouse = {
+            x: null,
+            y: null,
+            radius: 150 // Interaction radius for particles around the mouse
+        };
+
+        // Update canvas size on window resize
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            init(); // Re-initialize particles on resize
+        });
+
+        // Mouse movement to interact with particles
+        window.addEventListener('mousemove', (event) => {
+            mouse.x = event.x;
+            mouse.y = event.y;
+        });
+
+        // Particle constructor function
+        class Particle {
+            constructor(x, y, directionX, directionY, size, color) {
+                this.x = x;
+                this.y = y;
+                this.directionX = directionX;
+                this.directionY = directionY;
+                this.size = size;
+                this.color = color;
+            }
+
+            // Method to draw individual particle
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2, false);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+            }
+
+            // Method to update particle position and handle boundaries
+            update() {
+                // Check if particle is still within canvas
+                if (this.x > canvas.width || this.x < 0) {
+                    this.directionX = -this.directionX;
+                }
+                if (this.y > canvas.height || this.y < 0) {
+                    this.directionY = -this.directionY;
+                }
+
+                // Check for mouse collision
+                let dx = mouse.x - this.x;
+                let dy = mouse.y - this.y;
+                let distance = Math.sqrt(dx*dx + dy*dy);
+                if (distance < mouse.radius + this.size) {
+                    if (mouse.x < this.x && this.x < canvas.width - this.size * 10) {
+                        this.x += 10;
+                    }
+                    if (mouse.x > this.x && this.x > this.size * 10) {
+                        this.x -= 10;
+                    }
+                    if (mouse.y < this.y && this.y < canvas.height - this.size * 10) {
+                        this.y += 10;
+                    }
+                    if (mouse.y > this.y && this.y > this.size * 10) {
+                        this.y -= 10;
+                    }
+                }
+
+                this.x += this.directionX;
+                this.y += this.directionY;
+
+                this.draw();
             }
         }
 
-        // Gemini API Integration for Project Idea Generation
-        document.addEventListener('DOMContentLoaded', () => {
-            const generateIdeaBtn = document.getElementById('generateIdeaBtn');
-            const aiOutputDiv = document.getElementById('aiOutput');
-            const skillListElement = document.getElementById('skill-list-for-ai');
+        // Create particle array
+        function init() {
+            particlesArray = [];
+            let numberOfParticles = (canvas.height * canvas.width) / 9000; // Adjust density
+            // Ensure a minimum number of particles for smaller screens
+            if (numberOfParticles < 50) numberOfParticles = 50;
 
-            generateIdeaBtn.addEventListener('click', async () => {
-                aiOutputDiv.innerHTML = '<div class="loading-spinner"></div> Generating idea...';
-                generateIdeaBtn.disabled = true; // Disable button during generation
+            for (let i = 0; i < numberOfParticles; i++) {
+                let size = (Math.random() * 5) + 1; // Particle size between 1 and 6
+                let x = (Math.random() * ((innerWidth - size * 2) - (size * 2)) + size * 2);
+                let y = (Math.random() * ((innerHeight - size * 2) - (size * 2)) + size * 2);
+                let directionX = (Math.random() * 0.5) - 0.25; // Speed and direction
+                let directionY = (Math.random() * 0.5) - 0.25;
+                let color = 'rgba(255, 255, 255, 0.8)'; // White particles with slight transparency
+                particlesArray.push(new Particle(x, y, directionX, directionY, size, color));
+            }
+        }
 
-                // Extract skills from the list items
-                const skills = Array.from(skillListElement.children).map(li => {
-                    const strongTag = li.querySelector('strong');
-                    return strongTag ? strongTag.textContent.replace(':', '').trim() : li.textContent.trim();
-                }).filter(skill => skill); // Filter out any empty strings
+        // Animation loop
+        function animate() {
+            requestAnimationFrame(animate);
+            ctx.clearRect(0, 0, innerWidth, innerHeight); // Clear canvas each frame
 
-                const skillsString = skills.join(', ');
+            for (let i = 0; i < particlesArray.length; i++) {
+                particlesArray[i].update();
+            }
+            connect();
+        }
 
-                const prompt = `Given the following skills: ${skillsString}. Generate a unique and innovative project idea that leverages at least two of these skills. The idea should be concise, around 2-3 sentences, and include a brief mention of which skills it uses.`;
-
-                try {
-                    let chatHistory = [];
-                    chatHistory.push({ role: "user", parts: [{ text: prompt }] });
-                    const payload = { contents: chatHistory };
-                    const apiKey = ""; // Canvas will automatically provide the API key
-                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-
-                    const response = await fetch(apiUrl, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-
-                    if (!response.ok) {
-                        const errorData = await response.json();
-                        throw new Error(`API error: ${response.status} ${response.statusText} - ${errorData.error.message}`);
+        // Connect particles with lines
+        function connect() {
+            let opacityValue = 1;
+            for (let a = 0; a < particlesArray.length; a++) {
+                for (let b = a; b < particlesArray.length; b++) {
+                    let distance = ((particlesArray[a].x - particlesArray[b].x) * (particlesArray[a].x - particlesArray[b].x)) +
+                                   ((particlesArray[a].y - particlesArray[b].y) * (particlesArray[a].y - particlesArray[b].y));
+                    // Adjust connection distance based on a percentage of canvas width/height for responsiveness
+                    if (distance < (Math.min(canvas.width, canvas.height) / 5) * (Math.min(canvas.width, canvas.height) / 5)) {
+                        opacityValue = 1 - (distance / 20000); // Lines fade with distance
+                        ctx.strokeStyle = 'rgba(0, 255, 255,' + opacityValue + ')'; // Cyan lines
+                        ctx.lineWidth = 1;
+                        ctx.beginPath();
+                        ctx.moveTo(particlesArray[a].x, particlesArray[a].y);
+                        ctx.lineTo(particlesArray[b].x, particlesArray[b].y);
+                        ctx.stroke();
                     }
-
-                    const result = await response.json();
-
-                    if (result.candidates && result.candidates.length > 0 &&
-                        result.candidates[0].content && result.candidates[0].content.parts &&
-                        result.candidates[0].content.parts.length > 0) {
-                        const text = result.candidates[0].content.parts[0].text;
-                        aiOutputDiv.textContent = text;
-                    } else {
-                        aiOutputDiv.textContent = 'Could not generate an idea. Please try again.';
-                        console.error('Unexpected API response structure:', result);
-                    }
-                } catch (error) {
-                    console.error('Error generating project idea:', error);
-                    aiOutputDiv.textContent = 'Failed to generate an idea. Please check your console for errors or try again later.';
-                } finally {
-                    generateIdeaBtn.disabled = false; // Re-enable button
                 }
-            });
-        });
+            }
+        }
+
+        // Initialize on window load
+        window.onload = function() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            init();
+            animate();
+        };
     </script>
 </body>
 </html>
